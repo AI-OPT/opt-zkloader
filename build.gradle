@@ -11,6 +11,8 @@ configurations.all {
 	    resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
  	}
 ext {
+	profile=project.hasProperty('profile')? (project['profile']==""?"aic-dev":project['profile']) : "aic-dev"
+    
     optBaseVersion="1.0.1-SNAPSHOT"
     optSdkVersion="2.1-SNAPSHOT"
 
@@ -32,7 +34,8 @@ dependencies {
 jar {
     baseName appName
     version moduleVersion
-//    include "com/ai/opt/sdk/*/**"
+    include "com/ai/opt/zkloader/*/**"
+    destinationDir file("$buildDir/m-libs/")
     manifest {
         attributes 'packageName': baseName, 'Built-By': builtBy,'create-date': new Date().format('yyyy-MM-dd HH:mm:ss'), 'Manifest-Version': version
     }
@@ -70,3 +73,20 @@ publishing {
         }
     }
 }
+
+
+task copyProjectsJar(type: Copy) {
+        from jar
+        destinationDir file("$buildDir/libs/core-libs")
+}
+task copy3rdJars(type: Copy) {
+    from configurations.runtime
+    destinationDir file("$buildDir/libs/3rd-libs")
+}
+
+task copyProjectsConfig(type: Copy) {
+    from fileTree(dir: 'src/main/resources')+fileTree(dir: 'profile/'+profile)
+    destinationDir file("$buildDir/config")
+}
+
+build.dependsOn copyProjectsJar,copy3rdJars,copyProjectsConfig
